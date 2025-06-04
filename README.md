@@ -64,3 +64,5 @@ OPENAI_API_KEY=your_openai_key
 ```python
 python3 my_code/filename.py
 ```
+## Important Note:
+The compressor.py is another way to run this, essentially it takes ALL of the scraped data and runs a chatgpt query to summarize that text down to more manageable context. For obvious reasons this is not as efficient, it simply exists as another method to show why the chunk/embed system is better. If you wanted to integrate this sort of query bot into a voice bot pipeline, perhaps through pipecat, you would probably have to use the compressor.py, as chromadb is not natively supported.
