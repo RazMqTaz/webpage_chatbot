@@ -56,3 +56,11 @@ OPENAI_API_KEY=your_openai_key
 ```
 - This is how my code accesses the api key, but it's not the only way to do it.
 
+### Step 7: Run code
+- The run_pipeline.py will run all the crawler, scraper, chunker/embedder, and then activate the query bot.
+- Each of these files can be called independently, for example you could rechunk/embed your scraped data if you wanted to change the chunk size or overlap.
+- Just make sure you've run the previous step or else it wont work, for example don't run the scraper before the crawler.
+- To run any script:
+```python
+python3 my_code/filename.py
+```
