@@ -6,7 +6,7 @@ A voice-enabled AI agent that scrapes websites, reads PDFs, and answers question
 ### Step 1: Clone this repository
 
 ```bash
-git clone https://github.com/RazMqTaz/webscrapper-bot.git
+git clone https://github.com/RazMqTaz/webpage_chatbot.git
 cd webscrapper-bot
 ```
 
