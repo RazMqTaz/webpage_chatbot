@@ -7,7 +7,7 @@ A voice-enabled AI agent that scrapes websites, reads PDFs, and answers question
 
 ```bash
 git clone https://github.com/RazMqTaz/webpage_chatbot.git
-cd webscrapper-bot
+cd webpage_chatbot
 ```
 
 ### Step 2: Install python 3.12+
