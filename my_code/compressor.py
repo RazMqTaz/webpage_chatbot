@@ -11,28 +11,32 @@ USER_PROMPT_TEMPLATE = (
     "A support chatbot will use distilled version as context. Output just summary and nothing else."
 )
 client = OpenAI()
-#return URL (first line in scraped_data.txt files and the content as one string)
+
+
+# return URL (first line in scraped_data.txt files and the content as one string)
 def get_url_and_content(file_path: str):
-    with open(file_path, "r", encoding = "utf-8") as f:
+    with open(file_path, "r", encoding="utf-8") as f:
         lines = f.readlines()
     url = lines[0].strip()
     content = "".join(lines[1:]).strip()
     return url, content
 
+
 def summarize_with_chatgpt(content: str) -> str:
 
     response = client.chat.completions.create(
-        model = "gpt-4.1",
-        messages = [
+        model="gpt-4.1",
+        messages=[
             {"role": "system", "content": USER_PROMPT_TEMPLATE},
-            {"role": "user", "content": content}
+            {"role": "user", "content": content},
         ],
-        temperature = 0.3,
+        temperature=0.3,
     )
     return response.choices[0].message.content.strip()
 
+
 def main():
-    with open(OUTPUT_FILE, "w", encoding = "utf-8") as out:
+    with open(OUTPUT_FILE, "w", encoding="utf-8") as out:
         for filename in os.listdir(INPUT_DIR):
             if filename.endswith(".txt"):
                 file_path = os.path.join(INPUT_DIR, filename)
@@ -44,6 +48,7 @@ def main():
                 except Exception as e:
                     print(f"Failed to summarize {filename}: {e}")
     print(f"Summaries saved to {OUTPUT_FILE}")
+
 
 if __name__ == "__main__":
     main()
