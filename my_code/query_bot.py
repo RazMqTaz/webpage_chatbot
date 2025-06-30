@@ -1,8 +1,12 @@
+import os
 from typing import List, Dict
 import chromadb
 import tldextract
 from openai import OpenAI
 import click
+from dotenv import load_dotenv
+
+load_dotenv()
 
 client = OpenAI()
 

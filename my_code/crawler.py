@@ -1,3 +1,4 @@
+import os
 import requests
 from bs4 import BeautifulSoup
 from urllib.parse import urljoin, urlparse
@@ -43,6 +44,8 @@ def crawl(domain: str, max_pages: int, delay: float, filter_media_types: bool, o
     parsed = urlparse(domain)
     if not parsed.scheme or not parsed.netloc:
         raise click.Badparameter("Invalid domain URL. Example: https://example.com/")
+    
+    os.makedirs(os.path.dirname(output), exist_ok=True)
     
     target_domain = parsed.netloc
     target_url = domain if domain.endswith("/") else domain + "/"

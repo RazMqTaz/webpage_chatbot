@@ -1,6 +1,7 @@
 import os
 from pathlib import Path
 from typing import List
+from dotenv import load_dotenv
 import tiktoken
 import chromadb
 from openai import OpenAI
@@ -16,6 +17,7 @@ DEFAULT_COLLECTION_NAME = "web_chunks"
 DEFAULT_CHROMADB_PATH = "chromadb"
 DEFAULT_EMBEDDING_MODEL = "text-embedding-3-small"
 
+load_dotenv()
 tokenizer = tiktoken.get_encoding("cl100k_base")
 client = OpenAI()
 
