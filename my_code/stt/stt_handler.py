@@ -1,6 +1,8 @@
 import asyncio
+
 from .audio_capture import AudioCapture
 from .soniox_provider import SonioxProvider
+from .parts import make_part
 
 
 class SpeechInputHandler:
@@ -10,7 +12,9 @@ class SpeechInputHandler:
         self._running = False
         self._task_audio = None
         self._task_receive = None
-        self.transcripts = []
+        self.final_transcripts = []
+        self.partial_transcript = ""
+        self.parts: list[dict] = []
 
     async def start(self) -> None:
         """Start audio capture and connect to Soniox for streaming."""
@@ -60,10 +64,24 @@ class SpeechInputHandler:
         """Continuously poll Soniox for transcripts and buffer them."""
         try:
             while self._running:
-                new_transcripts = await self.soniox.get_transcripts()
-                if new_transcripts:
-                    self.transcripts.extend(new_transcripts)
-                await asyncio.sleep(0.1)  # Poll interval, adjust as needed
+                incoming = await self.soniox.get_transcripts()
+                for item in incoming:
+                    tokens = item.get("tokens", [])
+                    is_final = item.get("is_final", False)
+
+                    text = "".join(token["text"] for token in tokens)
+                    # Finalized text is permaently added to self.transcript
+                    if is_final:
+                        if text:
+                            self.final_transcripts.append(text)
+                        self.partial_transcript = ""
+                    else:
+                        self.partial_transcript = text
+                    
+                    # Save all parts (final and non-final)
+                    self.parts.append(make_part(text=text, is_final=is_final))
+                
+                await asyncio.sleep(0.01)
         except asyncio.CancelledError:
             pass
         except Exception as e:
@@ -72,4 +90,8 @@ class SpeechInputHandler:
 
     def get_transcript(self) -> str:
         """Return concatenated transcripts collected so far."""
-        return " ".join(self.transcripts)
+        return " ".join(self.final_transcripts) + " " + self.partial_transcript
+    
+    def get_parts(self) -> list[dict]:
+        parts, self.parts = self.parts, []
+        return parts

@@ -1,6 +1,7 @@
 import asyncio
 import json
 import websockets
+from .parts import make_part
 
 
 class SonioxProvider:
@@ -90,20 +91,19 @@ class SonioxProvider:
         try:
             async for message in self.websocket:
                 data = json.loads(message)
+                print(data)
                 if "error_message" in data:
                     print(f"SonioxProvider error: {data['error_message']}")
                     await self.disconnect()
                     break
 
                 if "tokens" in data:
-                    texts = [
-                        token.get("text", "")
-                        for token in data["tokens"]
-                        if token.get("text")
-                    ]
-                    transcript_text = "".join(texts)
-                    if transcript_text:
-                        await self._receive_queue.put(transcript_text)
+                   for token in data["tokens"]:
+                    part = make_part(
+                        text=token.get("text", ""),
+                        is_final=token.get("is_final", False),
+                    )
+                    await self._receive_queue.put(part)
         except asyncio.CancelledError:
             pass
         except Exception as e:

@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Live STT Transcript</title>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    margin: 1rem;
+  }
+  #transcript {
+    font-size: 1.2rem;
+    line-height: 1.5;
+  }
+  .final-text {
+    color: black;
+    font-style: normal;
+  }
+  .partial-text {
+    color: grey;
+    font-style: italic;
+  }
+</style>
+</head>
+<body>
+
+<h2>Live Speech Transcript</h2>
+<div id="transcript">
+  <span class="final-text" id="final-text"></span>
+  <span class="partial-text" id="partial-text"></span>
+</div>
+
+<script>
+  const finalTextElem = document.getElementById("final-text");
+  const partialTextElem = document.getElementById("partial-text");
+
+  let partialBuffer = "";
+
+  const ws = new WebSocket(`ws://${window.location.host}/ws/transcribe`);
+
+  ws.onmessage = (event) => {
+    try {
+      const part = JSON.parse(event.data);
+      const text = part.text || "";
+      const isFinal = part.is_final;
+
+      if (isFinal) {
+        // Final part: append all accumulated partials + this final text to final display
+        finalTextElem.textContent += partialBuffer + text + " ";
+        // Clear partial buffer and partial display
+        partialBuffer = "";
+        partialTextElem.textContent = "";
+      } else {
+        // Non-final part: append text to partial buffer and update partial display
+        partialBuffer += text;
+        partialTextElem.textContent = partialBuffer;
+      }
+    } catch (e) {
+      console.error("Failed to parse message:", e);
+    }
+  };
+</script>
+
+</body>
+</html>
