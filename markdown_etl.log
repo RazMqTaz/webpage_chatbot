@@ -1,0 +1,39 @@
+2025-06-30 22:27:06,347 - __main__ - INFO - Starting Markdown ETL Pipeline
+2025-06-30 22:27:06,348 - __main__ - INFO - Input directory: data/markdown_files
+2025-06-30 22:27:06,349 - __main__ - INFO - Output directory: data/processed_markdown
+2025-06-30 22:27:06,349 - __main__ - INFO - Step 1: Extracting markdown files...
+2025-06-30 22:27:06,350 - extractor - INFO - Found 1 markdown files
+2025-06-30 22:27:06,351 - extractor - INFO - Successfully extracted 1 markdown files
+2025-06-30 22:27:06,351 - __main__ - INFO - Step 2: Transforming markdown content...
+2025-06-30 22:27:06,353 - transformer - WARNING - PyYAML not available, skipping frontmatter parsing
+2025-06-30 22:27:06,354 - transformer - INFO - Successfully transformed 1 markdown files
+2025-06-30 22:27:06,354 - __main__ - INFO - Step 3: Loading processed data...
+2025-06-30 22:27:06,356 - loader - INFO - Saved text file: data/processed_markdown\example.txt
+2025-06-30 22:27:06,358 - loader - INFO - Saved processing summary: data/processed_markdown\processing_summary.txt
+2025-06-30 22:27:06,359 - loader - INFO - Saved JSON data: data/processed_markdown\processed_data.json
+2025-06-30 22:27:06,359 - loader - INFO - Successfully loaded 1 files to data/processed_markdown
+2025-06-30 22:27:06,359 - __main__ - INFO - ETL Pipeline completed successfully
+2025-06-30 22:27:06,360 - __main__ - INFO - Processed 1 files successfully
+2025-06-30 22:27:06,360 - __main__ - INFO - Encountered 0 errors
+2025-06-30 22:27:06,360 - __main__ - INFO - Total words processed: 153
+2025-06-30 22:27:06,360 - __main__ - INFO - Total sections extracted: 7
+2025-06-30 22:40:12,456 - __main__ - INFO - Starting Markdown ETL Pipeline
+2025-06-30 22:40:12,457 - __main__ - INFO - Input directory: data/markdown_files
+2025-06-30 22:40:12,457 - __main__ - INFO - Output directory: data/processed_markdown
+2025-06-30 22:40:12,457 - __main__ - INFO - Step 1: Extracting markdown files...
+2025-06-30 22:40:12,458 - extractor - INFO - Found 2 markdown files
+2025-06-30 22:40:12,460 - extractor - INFO - Successfully extracted 2 markdown files
+2025-06-30 22:40:12,460 - __main__ - INFO - Step 2: Transforming markdown content...
+2025-06-30 22:40:12,462 - transformer - WARNING - PyYAML not available, skipping frontmatter parsing
+2025-06-30 22:40:12,463 - transformer - INFO - Successfully transformed 2 markdown files
+2025-06-30 22:40:12,464 - __main__ - INFO - Step 3: Loading processed data...
+2025-06-30 22:40:12,465 - loader - INFO - Saved text file: data/processed_markdown\example.txt
+2025-06-30 22:40:12,466 - loader - INFO - Saved text file: data/processed_markdown\Shadow Slave.txt
+2025-06-30 22:40:12,467 - loader - INFO - Saved processing summary: data/processed_markdown\processing_summary.txt
+2025-06-30 22:40:12,469 - loader - INFO - Saved JSON data: data/processed_markdown\processed_data.json
+2025-06-30 22:40:12,470 - loader - INFO - Successfully loaded 2 files to data/processed_markdown
+2025-06-30 22:40:12,470 - __main__ - INFO - ETL Pipeline completed successfully
+2025-06-30 22:40:12,471 - __main__ - INFO - Processed 2 files successfully
+2025-06-30 22:40:12,472 - __main__ - INFO - Encountered 0 errors
+2025-06-30 22:40:12,472 - __main__ - INFO - Total words processed: 1,148
+2025-06-30 22:40:12,473 - __main__ - INFO - Total sections extracted: 19
