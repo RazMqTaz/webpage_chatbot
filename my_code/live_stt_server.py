@@ -49,8 +49,9 @@ async def websocket_endpoint(websocket: WebSocket):
     try:
         while True:
             parts = await provider.receive_parts()
-            for part in parts:
-                await websocket.send_json(part)
+            if parts:
+                # Send entire list as one JSON message
+                await websocket.send_json(parts)
             await asyncio.sleep(0.01)
     except WebSocketDisconnect:
         print("Client disconnected")

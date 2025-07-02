@@ -1,49 +1,117 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Live STT</title>
+  <title>Live STT Editable</title>
   <style>
-    #transcript { font-size: 1.2em; }
-    .partial { color: gray; font-style: italic; }
-    .final { color: black; font-weight: normal; }
+    #editor {
+      width: 600px;
+      min-height: 150px;
+      font-size: 1.2em;
+      padding: 5px;
+      border: 1px solid #ccc;
+      white-space: pre-wrap;
+      outline: none;
+      font-family: monospace;
+      position: relative;
+    }
+    #partial {
+      color: gray;
+      font-style: italic;
+      user-select: none;
+      pointer-events: none;
+    }
   </style>
 </head>
 <body>
-  <h1>Live Speech-to-Text</h1>
-  <div id="transcript"></div>
+  <h1>Live Speech-to-Text Editable</h1>
+
+  <div id="editor" contenteditable="true" spellcheck="false"></div>
 
   <script>
     const ws = new WebSocket("ws://localhost:8000/ws/transcribe");
-    let partialSpan = null;
+    const editor = document.getElementById("editor");
+
+    let finalText = "";
+
+    // Create a span for partial text inside the editor
+    const partialSpan = document.createElement("span");
+    partialSpan.id = "partial";
+
+    // Insert partialSpan at the end of editor's content
+    function updatePartialText(text) {
+      partialSpan.textContent = text;
+      if (!editor.contains(partialSpan)) {
+        editor.appendChild(partialSpan);
+      }
+      placeCaretBeforePartial();
+    }
+
+    // Move caret to just before partialSpan, so user types after final text but before partial
+    function placeCaretBeforePartial() {
+      const range = document.createRange();
+      const sel = window.getSelection();
+
+      // Caret should be right before the partial span
+      range.setStart(editor, editor.childNodes.length - 1);
+      range.setEnd(editor, editor.childNodes.length - 1);
+      sel.removeAllRanges();
+      sel.addRange(range);
+    }
+
+    // Clean partialSpan if no partial text
+    function clearPartialText() {
+      if (editor.contains(partialSpan)) {
+        partialSpan.textContent = "";
+      }
+    }
 
     ws.onmessage = event => {
-      const part = JSON.parse(event.data);
-      if (!part.text) return;
+      let data;
+      try {
+        data = JSON.parse(event.data);
+      } catch(e) {
+        console.error("Invalid JSON:", e);
+        return;
+      }
 
-      const transcriptDiv = document.getElementById("transcript");
+      const parts = Array.isArray(data.tokens) ? data.tokens : (Array.isArray(data) ? data : []);
+      if (!parts.length) {
+        clearPartialText();
+        return;
+      }
 
-      if (part.is_final) {
-        // Remove partial display
-        if (partialSpan) {
-          transcriptDiv.removeChild(partialSpan);
-          partialSpan = null;
+      const finalTokens = parts.filter(t => t.is_final);
+      const partialTokens = parts.filter(t => !t.is_final);
+
+      if (finalTokens.length > 0) {
+        const newFinalText = finalTokens.map(t => t.text).join("");
+
+        // Insert text node before partial span (preserves user formatting)
+        if (editor.contains(partialSpan)) {
+          const range = document.createRange();
+          range.setStartBefore(partialSpan);
+          const textNode = document.createTextNode(newFinalText);
+          range.insertNode(textNode);
+        } else {
+          editor.appendChild(document.createTextNode(newFinalText));
         }
 
-        // Append final text
-        const finalSpan = document.createElement("span");
-        finalSpan.className = "final";
-        finalSpan.textContent = part.text;
-        transcriptDiv.appendChild(finalSpan);
+        finalText = editor.innerText.replace(partialSpan.textContent, "").trim();
+        placeCaretBeforePartial();
+      }
+
+      if (partialTokens.length > 0) {
+        updatePartialText(partialTokens.map(t => t.text).join(""));
       } else {
-        // Replace partial text instead of accumulating
-        if (!partialSpan) {
-          partialSpan = document.createElement("span");
-          partialSpan.className = "partial";
-          transcriptDiv.appendChild(partialSpan);
-        }
-        partialSpan.textContent = part.text;
+        clearPartialText();
       }
     };
+
+
+    // On focus, move caret before partial text so user types in correct place
+    editor.addEventListener("focus", () => {
+      placeCaretBeforePartial();
+    });
   </script>
 </body>
 </html>
