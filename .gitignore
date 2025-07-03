@@ -5,3 +5,4 @@ data/
 chromadb/
 .venv/
 venv/
+my_code/google/credentials.json
