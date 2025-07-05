@@ -9,7 +9,7 @@ from tqdm import tqdm
 import click
 
 # Hardcoded defaults
-DEFAULT_INPUT_DIR = "data/scraped_data"
+DEFAULT_INPUT_DIR = "data"
 DEFAULT_CHUNK_SIZE = 500
 DEFAULT_CHUNK_OVERLAP = 100
 DEFAULT_BATCH_SIZE = 100
@@ -87,7 +87,7 @@ def main(
 ) -> None:
 
     # validate chunk_overlap < chunk_size
-    if chunk_overlap >= chunk_size:
+    while chunk_overlap >= chunk_size:
         click.echo(
             click.style(
                 "Warning: chunk_overlap should be smaller than chunk_size. Adjusting chunk_overlap.",
@@ -98,12 +98,6 @@ def main(
 
     if verbose:
         click.echo(f"Input directory: {input_dir}")
-        click.echo(f"Chunk size: {chunk_size}")
-        click.echo(f"Chunk overlap: {chunk_overlap}")
-        click.echo(f"Batch size: {batch_size}")
-        click.echo(f"ChromaDB collection: {collection_name}")
-        click.echo(f"ChromaDB path: {chromadb_path}")
-        click.echo(f"Embedding model: {embedding_model}")
 
     chroma_client = chromadb.PersistentClient(path=chromadb_path)
     collection = chroma_client.get_or_create_collection(name=collection_name)
@@ -139,31 +133,48 @@ def main(
     all_texts = []
     all_ids = []
 
-    files = [f for f in os.listdir(input_dir) if f.endswith(".txt")]
-    for filename in tqdm(files, desc="Chunking files"):
-        with open(os.path.join(input_dir, filename), "r", encoding="utf-8") as f:
-            text = f.read().strip()
-
-        chunks = split_into_chunks(text)
-        base_name = Path(filename).stem
-
-        for i, chunk in enumerate(chunks):
-            chunk_id = f"{base_name}_chunk{i}"
-            all_ids.append(chunk_id)
-            all_texts.append(chunk)
-
-        if verbose:
-            click.echo(f"Split {filename} into {len(chunks)} chunks")
-
     if verbose:
-        click.echo("Embedding chunks...")
+        click.echo("Chunking data . . .")
 
+    # Walk through all dirs and find .txt files
+    for root, _, files in os.walk(input_dir):
+        for filename in files:
+            # Skip crawled pages and files that don't end with .txt
+            if filename == "crawled_pages.txt" or not filename.endswith(".txt"):
+                continue
+            if filename.endswith(".txt"):
+                filepath = os.path.join(root, filename)
+                with open(filepath, "r", encoding="utf-8") as f:
+                    text = f.read().strip()
+
+                chunks = split_into_chunks(text)
+
+                # Naming stuff, ultimately: 
+                # base_name holds filename with the stem ('.txt')
+                # relative_root will change data/google/documents to google_documents
+                # base_prefix will ensure unique ID's, even if files have same name in different data/ folders:
+                #       e.g. "google_notes", "obsidian_notes"
+                base_name = Path(filename).stem
+                relative_root = Path(root).relative_to(input_dir).as_posix().replace("/", "_")
+                base_prefix = f"{relative_root}_{base_name}" if relative_root else base_name
+
+                for i, chunk in enumerate(chunks):
+                    # Assigns id to each chunk
+                    chunk_id = f"{base_prefix}_chunk{i}"
+                    all_ids.append(chunk_id)
+                    all_texts.append(chunk)
+
+                if verbose:
+                    click.echo(f"Chunked {filepath} into {len(chunks)} chunks")
+    if verbose:
+        click.echo(f"Embedding chunks . . .")
+    
+    # Embeds chunks
     embeddings = embed_texts(all_texts)
-
+    # Sends embeddings to chromadb
     collection.upsert(documents=all_texts, embeddings=embeddings, ids=all_ids)
 
     click.echo(click.style(f"Embedded and stored {len(all_texts)} chunks!", fg="green"))
-
 
 if __name__ == "__main__":
     main()

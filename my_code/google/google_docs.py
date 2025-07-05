@@ -38,7 +38,7 @@ class DocFormatter:
         self.doc = full_doc_json
         self.chunks = []
 
-    def format_to_chunks(self, max_chunk_size=1500):
+    def format_tabs(self, max_chunk_size=1500):
         # Parses doc and creates text chunks for chroma
         # Includes hierarchy like tabs, chapters, etc
         tabs = self.doc.get("tabs", [])
@@ -46,10 +46,9 @@ class DocFormatter:
         for tab in tabs:
             self._add_current_and_child_tabs(tab, all_tabs)
 
-        chunks = []
-        for tab in all_tabs:
+        tab_texts = []
+        for idx, tab in enumerate(all_tabs, start=1):
             tab_title = tab.get("tabProperties", {}).get("title", "Untitled Tab")
-            tab_id = tab.get("tabProperties", {}).get("tabId")
             document_tab = tab.get("documentTab", {})
             content = document_tab.get("body", {}).get("content", [])
 
@@ -57,22 +56,43 @@ class DocFormatter:
             text = self._read_structural_elements(content)
 
             if text.strip():
-                # Split large text into smaller text for more efficient chroma query
-                split_chunks = self._split_text_into_chunks(text, max_chunk_size)
+                full_text = (
+                    f"Document ID: {self.doc.get('documentId', '')}\n"
+                    f"Document Title: {self.doc.get('title', '')}\n"
+                    f"Tab Title: {tab_title}\n"
+                    f"Tab Number: {idx}\n\n"
+                    + text.strip()
+                )
+                tab_texts.append((idx, full_text))
+        self.tab_texts = tab_texts
+        return tab_texts
+    
+    def save_tabs_as_txt(self, out_dir="document_tabs"):
+        os.makedirs(out_dir, exist_ok=True)
+        base_doc_name = self.doc.get("title", "doc").replace(" ", "_")
 
-                for c in split_chunks:
-                    chunk = {
-                        "text": c,
-                        "metadata": {
-                            "documentId": self.doc.get("documentId"),
-                            "docTitle": self.doc.get("title"),
-                            "tabTitle": tab_title,
-                            "tabId": tab_id,
-                        },
-                    }
-                    chunks.append(chunk)
-        self.chunks = chunks
-        return self.chunks
+        # Write/overwrite current tab files
+        for idx, tab_text in self.tab_texts:
+            filename = f"{base_doc_name}_tab{idx}.txt"
+            filepath = os.path.join(out_dir, filename)
+            with open(filepath, "w", encoding="utf-8") as f:
+                f.write(tab_text)
+
+        # Clean up leftover tab files with index > highest current index
+        max_idx = max(idx for idx, _ in self.tab_texts) if self.tab_texts else 0
+        i = max_idx + 1
+        while True:
+            leftover_file = os.path.join(out_dir, f"{base_doc_name}_tab{i}.txt")
+            if os.path.exists(leftover_file):
+                try:
+                    os.remove(leftover_file)
+                    print(f"Deleted leftover tab file: {leftover_file}")
+                except Exception as e:
+                    print(f"Failed to delete {leftover_file}: {e}")
+                i += 1
+            else:
+                break
+
 
     def _add_current_and_child_tabs(self, tab, all_tabs) -> None:
         all_tabs.append(tab)
@@ -136,44 +156,3 @@ class DocFormatter:
                 toc = el["tableOfContents"]
                 text += self._read_structural_elements(toc.get("content", []))
         return text
-
-    def _split_text_into_chunks(self, text: str, max_chunk_size: int) -> list[str]:
-        paragraphs = text.split("\n")
-        chunks = []
-        current_chunk = ""
-        for para in paragraphs:
-            # If adding this paragraph exceeds max_chunk_size, start new chunk
-            if len(current_chunk) + len(para) + 1 > max_chunk_size:
-                chunks.append(current_chunk.strip())
-                current_chunk = para + "\n"
-            else:
-                current_chunk += para + "\n"
-        if current_chunk.strip():
-            chunks.append(current_chunk.strip())
-        return chunks
-
-    def save_chunks_as_txt(self, out_dir="document_chunks"):
-        os.makedirs(out_dir, exist_ok=True)
-
-        # Overwrite or create chunk files for current chunks
-        for i, chunk in enumerate(self.chunks, 1):
-            meta = chunk.get("metadata", {})
-            filename = f"chunk_{i}.txt"
-            filepath = os.path.join(out_dir, filename)
-            with open(filepath, "w", encoding="utf-8") as f:
-                f.write(f"Document ID: {meta.get('documentId', '')}\n")
-                f.write(f"Document Title: {meta.get('docTitle', '')}\n")
-                f.write(f"Tab Title: {meta.get('tabTitle', '')}\n")
-                f.write(f"Tab ID: {meta.get('tabId', '')}\n\n")
-                f.write(chunk.get("text", "").strip())
-                f.write("\n")
-        
-        # Now delete any leftover chunk files with index > len(self.chunks)
-        i = len(self.chunks) + 1
-        while True:
-            leftover_file = os.path.join(out_dir, f"chunk_{i}.txt")
-            if os.path.exists(leftover_file):
-                os.remove(leftover_file)
-                i += 1
-            else:
-                break
