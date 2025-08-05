@@ -13,7 +13,7 @@ from tqdm import tqdm
 
 # Import our ETL components
 from extractor import MarkdownExtractor
-from transformer import MarkdownTransformer
+from my_code.obsidian.transformer import MarkdownTransformer
 from loader import MarkdownLoader
 
 # Configure logging

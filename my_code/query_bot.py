@@ -72,47 +72,10 @@ def chat_with_context(
     # returns first (and usually only) response's text
     return answer + "\n"
 
+def query(question: str, history: List[Dict[str, str]], top_k: int = 5) -> str:
+    question_embedding = embed_text(question)
+    results = query_chroma(question_embedding, top_k=top_k)
+    context_chunks = results["documents"][0]
 
-@click.command()
-@click.option(
-    "--domain",
-    required=True,
-    help="The root URL of the website used for document context (e.g. https://soniox.com)",
-)
-@click.option(
-    "--top-k",
-    default=5,
-    show_default=True,
-    help="Number of top matching document chunks to retrieve from ChromaDB",
-)
-def main(domain: str, top_k: int):
-    name = get_domain_name(domain)
-    conversation_history = []
-
-    while True:
-        question = input(
-            f"Ask a question about {name} or type 'exit' to end session: \n"
-        ).strip()
-        if not question:
-            print("Please enter a valid question.")
-            continue
-        if question == "exit":
-            print("Ending session")
-            break
-
-        print("Embedding your question...")
-        question_embedding = embed_text(question)
-
-        print("Searching for relevant document chunks...")
-        results = query_chroma(question_embedding, top_k=5)
-
-        # list of matched chunks text
-        docs = results["documents"][0]
-
-        print("Querying ChatGPT for answer...")
-        answer = chat_with_context(docs, question, conversation_history)
-        print("\nAnswer:\n" + answer)
-
-
-if __name__ == "__main__":
-    main()
+    answer = chat_with_context(context_chunks=context_chunks, question=question, history=history)
+    return answer
