@@ -13,21 +13,7 @@ import click
 # config
 MAX_STATUS_WIDTH = 80
 
-
-@click.command()
-@click.option(
-    "--input-file",
-    default="data/crawled_pages.txt",
-    show_default=True,
-    help="Path to file containing list of URLs to scrape",
-)
-@click.option(
-    "--output-dir",
-    default="data/scraped_data",
-    show_default=True,
-    help="Directory to save scraped text data",
-)
-def scrape(input_file: str, output_dir: str) -> None:
+def scrape(input_file: str = "data/crawled_pages.txt", output_dir: str = "data/scraped_data/") -> None:
     # clears previously scraped data
     if os.path.exists(output_dir):
         for filename in os.listdir(output_dir):

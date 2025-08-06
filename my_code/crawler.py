@@ -12,7 +12,7 @@ import click
 
 # retrieves the domain name, urlparse splits up the url into different parts, .netloc returns the domain (eg: soniox.com)
 DOMAIN = "https://soniox.com/"
-MAX_PAGES = 100
+MAX_PAGES = 10
 REQUEST_DELAY_SEC = 1
 FILTER_MEDIA_TYPES = True
 MAX_STATUS_WIDTH = 80
@@ -48,44 +48,11 @@ def should_ignore_url(url: str, filter_media_types: bool) -> bool:
     parsed_path = urlparse(url).path.lower()
     return any(parsed_path.endswith(ext) for ext in IGNORED_EXTENSIONS)
 
-
-@click.command()
-@click.option(
-    "--domain", required=True, help="Starting domain (e.g., https://example.com/)"
-)
-@click.option(
-    "--max-pages",
-    default=100,
-    show_default=True,
-    type=int,
-    help="Maximum number of pages to crawl",
-)
-@click.option(
-    "--delay",
-    default=1.0,
-    show_default=True,
-    type=float,
-    help="Delay in seconds between requests",
-)
-@click.option(
-    "--filter-media-types/--no-filter-media-types",
-    default=True,
-    show_default=True,
-    help="Whether to skip media files like .mp3, .zip, etc.",
-)
-@click.option(
-    "--output",
-    default="data/crawled_pages.txt",
-    show_default=True,
-    help="File to save crawled URLs",
-)
 def crawl(
-    domain: str, max_pages: int, delay: float, filter_media_types: bool, output: str
+    domain: str, max_pages: int = MAX_PAGES, delay: float = REQUEST_DELAY_SEC, filter_media_types: bool = FILTER_MEDIA_TYPES, output: str = "data/"
 ) -> None:
 
     parsed = urlparse(domain)
-    if not parsed.scheme or not parsed.netloc:
-        raise click.Badparameter("Invalid domain URL. Example: https://example.com/")
 
     os.makedirs(os.path.dirname(output), exist_ok=True)
 

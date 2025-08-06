@@ -21,69 +21,14 @@ load_dotenv()
 tokenizer = tiktoken.get_encoding("cl100k_base")
 client = OpenAI()
 
-
-# arg passing
-@click.command()
-@click.option(
-    "--input-dir",
-    default=DEFAULT_INPUT_DIR,
-    show_default=True,
-    help="Directory with scraped text files",
-)
-@click.option(
-    "--chunk-size",
-    default=DEFAULT_CHUNK_SIZE,
-    show_default=True,
-    type=int,
-    help="Number of tokens per chunk",
-)
-@click.option(
-    "--chunk-overlap",
-    default=DEFAULT_CHUNK_OVERLAP,
-    show_default=True,
-    type=int,
-    help="Token overlap between chunks",
-)
-@click.option(
-    "--batch-size",
-    default=DEFAULT_BATCH_SIZE,
-    show_default=True,
-    type=int,
-    help="Batch size for embedding API calls",
-)
-@click.option(
-    "--collection-name",
-    default=DEFAULT_COLLECTION_NAME,
-    show_default=True,
-    help="ChromaDB collection name",
-)
-@click.option(
-    "--chromadb-path",
-    default=DEFAULT_CHROMADB_PATH,
-    show_default=True,
-    help="Path for ChromaDB persistence",
-)
-@click.option(
-    "--embedding-model",
-    default=DEFAULT_EMBEDDING_MODEL,
-    show_default=True,
-    help="OpenAI embedding model",
-)
-@click.option(
-    "--verbose/--quiet",
-    default=True,
-    show_default=True,
-    help="Toggle verbosity (displays debug info)",
-)
-def main(
-    input_dir: str,
-    chunk_size: int,
-    chunk_overlap: int,
-    batch_size: int,
-    collection_name: str,
-    chromadb_path: str,
-    embedding_model: str,
-    verbose: bool,
+def chunk_embed(
+    input_dir: str = DEFAULT_INPUT_DIR,
+    chunk_size: int = DEFAULT_CHUNK_SIZE,
+    chunk_overlap: int = DEFAULT_CHUNK_OVERLAP,
+    batch_size: int = DEFAULT_BATCH_SIZE,
+    collection_name: str = DEFAULT_COLLECTION_NAME,
+    chromadb_path: str = DEFAULT_CHROMADB_PATH,
+    embedding_model: str = DEFAULT_EMBEDDING_MODEL,
 ) -> None:
 
     # validate chunk_overlap < chunk_size
@@ -95,9 +40,6 @@ def main(
             )
         )
         chunk_overlap = chunk_size // 2
-
-    if verbose:
-        click.echo(f"Input directory: {input_dir}")
 
     chroma_client = chromadb.PersistentClient(path=chromadb_path)
     collection = chroma_client.get_or_create_collection(name=collection_name)
@@ -133,9 +75,6 @@ def main(
     all_texts = []
     all_ids = []
 
-    if verbose:
-        click.echo("Chunking data . . .")
-
     # Walk through all dirs and find .txt files
     for root, _, files in os.walk(input_dir):
         for filename in files:
@@ -163,11 +102,6 @@ def main(
                     chunk_id = f"{base_prefix}_chunk{i}"
                     all_ids.append(chunk_id)
                     all_texts.append(chunk)
-
-                if verbose:
-                    click.echo(f"Chunked {filepath} into {len(chunks)} chunks")
-    if verbose:
-        click.echo(f"Embedding chunks . . .")
     
     # Embeds chunks
     embeddings = embed_texts(all_texts)
@@ -177,4 +111,4 @@ def main(
     click.echo(click.style(f"Embedded and stored {len(all_texts)} chunks!", fg="green"))
 
 if __name__ == "__main__":
-    main()
+    chunk_embed()

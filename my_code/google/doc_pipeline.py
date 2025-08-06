@@ -1,12 +1,11 @@
-from google_docs import (
+from my_code.google.google_docs import (
     get_doc_content,
     extract_doc_id,
     DocFormatter,
 )
 
 
-def main():
-    url = input("Enter Google Docs URL: ")
+def scrape_doc(url: str):
     try:
         doc_id = extract_doc_id(url)
     except ValueError as e:
@@ -29,4 +28,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    scrape_doc()

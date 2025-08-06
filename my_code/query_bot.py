@@ -45,9 +45,9 @@ def query_chroma(query_embedding: List[float], top_k: int = 5) -> Dict:
     return results
 
 
-def chat_with_context(
+def chat_with_context_stream(
     context_chunks: List[str], question: str, history: List[Dict[str, str]]
-) -> str:
+):
     context_text = "\n\n---\n\n".join(context_chunks)
     system_prompt = (
         "You are a helpful assistant. Use the following extracted parts of documents to answer the user's questions. "
@@ -65,17 +65,25 @@ def chat_with_context(
         messages=messages,
         # controls randomness of the output, 0.2 is good for factual summarization and QA (according to ChatGPT)
         temperature=0.2,
+        stream=True,
     )
-    answer = response.choices[0].message.content
+    full_response = ""
+    for chunk in response:
+        #chunk is a dict-like object with 'choices' and delta content
+        delta = chunk.choices[0].delta
+        if hasattr(delta, "content") and delta.content:
+            text = delta.content
+            full_response += text
+            # Emit partial chunks as they arrive
+            yield text
+    
     history.append({"role": "user", "content": question})
-    history.append({"role": "assistant", "content": answer})
-    # returns first (and usually only) response's text
-    return answer + "\n"
+    history.append({"role": "assistant", "content": full_response})
 
 def query(question: str, history: List[Dict[str, str]], top_k: int = 5) -> str:
     question_embedding = embed_text(question)
     results = query_chroma(question_embedding, top_k=top_k)
     context_chunks = results["documents"][0]
 
-    answer = chat_with_context(context_chunks=context_chunks, question=question, history=history)
+    answer = chat_with_context_stream(context_chunks=context_chunks, question=question, history=history)
     return answer
