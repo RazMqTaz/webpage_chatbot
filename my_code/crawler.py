@@ -49,15 +49,16 @@ def should_ignore_url(url: str, filter_media_types: bool) -> bool:
     return any(parsed_path.endswith(ext) for ext in IGNORED_EXTENSIONS)
 
 def crawl(
-    domain: str, max_pages: int = MAX_PAGES, delay: float = REQUEST_DELAY_SEC, filter_media_types: bool = FILTER_MEDIA_TYPES, output: str = "data/"
+    domain: str, session_id: str, max_pages: int = MAX_PAGES, delay: float = REQUEST_DELAY_SEC, filter_media_types: bool = FILTER_MEDIA_TYPES, base_output_dir: str = "data/sessions"
 ) -> None:
 
     parsed = urlparse(domain)
-
-    os.makedirs(os.path.dirname(output), exist_ok=True)
-
     target_domain = parsed.netloc
     target_url = domain if domain.endswith("/") else domain + "/"
+
+    output_dir = os.path.join(base_output_dir, session_id)
+    os.makedirs(os.path.dirname(output_dir), exist_ok=True)
+    output_file = os.path.join(output_dir, "crawled_pages.txt")
 
     # state
     q = deque([target_url])
@@ -117,12 +118,12 @@ def crawl(
         # delay for 1 second so to not overload the server
         time.sleep(delay)
 
-    with open("data/crawled_pages.txt", "w") as f:
+    with open(output_file, "a") as f:
         for url in visited:
             f.write(url + "\n")
 
     click.echo(
-        click.style(f"\nCrawling complete. {len(visited)} pages saved to {output}")
+        click.style(f"\nCrawling complete. {len(visited)} pages saved to {output_file}")
     )
 
 

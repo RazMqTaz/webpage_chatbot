@@ -13,7 +13,7 @@ DEFAULT_INPUT_DIR = "data"
 DEFAULT_CHUNK_SIZE = 500
 DEFAULT_CHUNK_OVERLAP = 100
 DEFAULT_BATCH_SIZE = 100
-DEFAULT_COLLECTION_NAME = "web_chunks"
+DEFAULT_COLLECTION_NAME = "chunks"
 DEFAULT_CHROMADB_PATH = "chromadb"
 DEFAULT_EMBEDDING_MODEL = "text-embedding-3-small"
 
@@ -22,14 +22,15 @@ tokenizer = tiktoken.get_encoding("cl100k_base")
 client = OpenAI()
 
 def chunk_embed(
-    input_dir: str = DEFAULT_INPUT_DIR,
+    session_id: str,
     chunk_size: int = DEFAULT_CHUNK_SIZE,
     chunk_overlap: int = DEFAULT_CHUNK_OVERLAP,
     batch_size: int = DEFAULT_BATCH_SIZE,
     collection_name: str = DEFAULT_COLLECTION_NAME,
-    chromadb_path: str = DEFAULT_CHROMADB_PATH,
     embedding_model: str = DEFAULT_EMBEDDING_MODEL,
 ) -> None:
+    
+    input_dir = f"data/sessions/{session_id}/"
 
     # validate chunk_overlap < chunk_size
     while chunk_overlap >= chunk_size:
@@ -41,6 +42,7 @@ def chunk_embed(
         )
         chunk_overlap = chunk_size // 2
 
+    chromadb_path = f"chromadb/sessions/{session_id}"
     chroma_client = chromadb.PersistentClient(path=chromadb_path)
     collection = chroma_client.get_or_create_collection(name=collection_name)
 

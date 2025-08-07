@@ -13,7 +13,10 @@ import click
 # config
 MAX_STATUS_WIDTH = 80
 
-def scrape(input_file: str = "data/crawled_pages.txt", output_dir: str = "data/scraped_data/") -> None:
+def scrape(session_id: str) -> None:
+    input_file = f"data/sessions/{session_id}/crawled_pages.txt"
+    output_dir = f"data/sessions/{session_id}/scraped_data"
+
     # clears previously scraped data
     if os.path.exists(output_dir):
         for filename in os.listdir(output_dir):
@@ -74,7 +77,7 @@ def scrape(input_file: str = "data/crawled_pages.txt", output_dir: str = "data/s
                 url.replace("https://", "").replace("http://", "").replace("/", "_")
             )
             # creates a new filepath for each pages scraped data
-            filepath = os.path.join("data/scraped_data", f"{filename}.txt")
+            filepath = os.path.join(f"data/sessions/{session_id}/scraped_data", f"{filename}.txt")
             with open(filepath, "w", encoding="utf-8") as out:
                 out.write(f"URL: {url}\n\n")
                 out.write(cleaned_text)

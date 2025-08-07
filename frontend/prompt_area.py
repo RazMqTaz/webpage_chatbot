@@ -13,8 +13,9 @@ from frontend.prompt_worker import PromptWorker
 
 
 class PromptArea(QWidget):
-    def __init__(self):
+    def __init__(self, session_id: str):
         super().__init__()
+        self.session_id = session_id
         self.thinking_cursor = None
         self.conversation_history = []
 
@@ -63,7 +64,8 @@ class PromptArea(QWidget):
 
         # Create worker and thread:
         self.thread = QThread()
-        self.worker = PromptWorker(prompt=user_input, history=self.conversation_history)
+        print(self.conversation_history)
+        self.worker = PromptWorker(session_id=self.session_id, prompt=user_input, history=self.conversation_history)
         self.worker.moveToThread(self.thread)
 
         # Connect signals

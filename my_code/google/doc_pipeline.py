@@ -5,7 +5,7 @@ from my_code.google.google_docs import (
 )
 
 
-def scrape_doc(url: str):
+def scrape_doc(url: str, session_id: str):
     try:
         doc_id = extract_doc_id(url)
     except ValueError as e:
@@ -21,7 +21,7 @@ def scrape_doc(url: str):
     formatter.format_tabs()
 
     # Save tabs as separate txt files in a directory
-    out_dir = f"data/google/{doc_id}/document_tabs"
+    out_dir = f"data/sessions/{session_id}/google/{doc_id}/document_tabs"
     formatter.save_tabs_as_txt(out_dir)
 
     print(f"\nTabs saved as separate text files in {out_dir}")

@@ -3,23 +3,22 @@ from typing import List, Dict
 import chromadb
 import tldextract
 from openai import OpenAI
-import click
 from dotenv import load_dotenv
 
 load_dotenv()
 
 client = OpenAI()
 
-# initialize chroma persistent client (load existing DB)
-chroma_client = chromadb.PersistentClient(path="chromadb")
-# load existing collection of text chunks
-collection = chroma_client.get_collection(name="web_chunks")
-
+def get_chroma_collection(session_id: str):
+    # initialize chroma persistent client (load existing DB)
+    chroma_client = chromadb.PersistentClient(path=f"chromadb/sessions/{session_id}")
+    # load existing collection of text chunks
+    collection = chroma_client.get_collection(name="chunks")
+    return collection
 
 def get_domain_name(url: str) -> str:
     extracted = tldextract.extract(url)
     return extracted.domain
-
 
 # this function exists as a bridge between natural language question and the vector database
 def embed_text(text: str) -> str:
@@ -30,20 +29,6 @@ def embed_text(text: str) -> str:
         model="text-embedding-3-small",
     )
     return response.data[0].embedding
-
-
-def query_chroma(query_embedding: List[float], top_k: int = 5) -> Dict:
-    # use the embedding search in ChromaDB
-    results = collection.query(
-        # chroma expects a list of vectors, even for one query
-        query_embeddings=[query_embedding],
-        # want the top N most relevant document chunks based on vector similarity
-        n_results=top_k,
-        include=["documents"],
-    )
-    # results is what will get fed into the build_prompt function
-    return results
-
 
 def chat_with_context_stream(
     context_chunks: List[str], question: str, history: List[Dict[str, str]]
@@ -80,9 +65,10 @@ def chat_with_context_stream(
     history.append({"role": "user", "content": question})
     history.append({"role": "assistant", "content": full_response})
 
-def query(question: str, history: List[Dict[str, str]], top_k: int = 5) -> str:
+def query(session_id: str, question: str, history: List[Dict[str, str]], top_k: int = 5) -> str:
     question_embedding = embed_text(question)
-    results = query_chroma(question_embedding, top_k=top_k)
+    collection = get_chroma_collection(session_id=session_id)
+    results = collection.query([question_embedding], n_results=top_k, include=["documents"])
     context_chunks = results["documents"][0]
 
     answer = chat_with_context_stream(context_chunks=context_chunks, question=question, history=history)
