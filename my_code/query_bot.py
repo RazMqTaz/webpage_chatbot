@@ -9,6 +9,7 @@ load_dotenv()
 
 client = OpenAI()
 
+
 def get_chroma_collection(session_id: str):
     # initialize chroma persistent client (load existing DB)
     chroma_client = chromadb.PersistentClient(path=f"chromadb/sessions/{session_id}")
@@ -16,9 +17,11 @@ def get_chroma_collection(session_id: str):
     collection = chroma_client.get_collection(name="chunks")
     return collection
 
+
 def get_domain_name(url: str) -> str:
     extracted = tldextract.extract(url)
     return extracted.domain
+
 
 # this function exists as a bridge between natural language question and the vector database
 def embed_text(text: str) -> str:
@@ -30,8 +33,12 @@ def embed_text(text: str) -> str:
     )
     return response.data[0].embedding
 
+
 def chat_with_context_stream(
-    context_chunks: List[str], question: str, history: List[Dict[str, str]]
+    context_chunks: List[str],
+    question: str,
+    history: List[Dict[str, str]],
+    model: str = "gpt-4o-mini",
 ):
     context_text = "\n\n---\n\n".join(context_chunks)
     system_prompt = (
@@ -46,7 +53,7 @@ def chat_with_context_stream(
 
     # sends chat-style request to OpenAI's API using the client previously created
     response = client.chat.completions.create(
-        model="gpt-4o-mini",
+        model=model,
         messages=messages,
         # controls randomness of the output, 0.2 is good for factual summarization and QA (according to ChatGPT)
         temperature=0.2,
@@ -54,22 +61,33 @@ def chat_with_context_stream(
     )
     full_response = ""
     for chunk in response:
-        #chunk is a dict-like object with 'choices' and delta content
+        # chunk is a dict-like object with 'choices' and delta content
         delta = chunk.choices[0].delta
         if hasattr(delta, "content") and delta.content:
             text = delta.content
             full_response += text
             # Emit partial chunks as they arrive
             yield text
-    
+
     history.append({"role": "user", "content": question})
     history.append({"role": "assistant", "content": full_response})
 
-def query(session_id: str, question: str, history: List[Dict[str, str]], top_k: int = 5) -> str:
+
+def query(
+    session_id: str,
+    question: str,
+    history: List[Dict[str, str]],
+    top_k: int = 5,
+    model: str = "gpt-4o-mini",
+) -> str:
     question_embedding = embed_text(question)
     collection = get_chroma_collection(session_id=session_id)
-    results = collection.query([question_embedding], n_results=top_k, include=["documents"])
+    results = collection.query(
+        [question_embedding], n_results=top_k, include=["documents"]
+    )
     context_chunks = results["documents"][0]
 
-    answer = chat_with_context_stream(context_chunks=context_chunks, question=question, history=history)
+    answer = chat_with_context_stream(
+        context_chunks=context_chunks, question=question, history=history, model=model
+    )
     return answer

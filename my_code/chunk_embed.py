@@ -42,6 +42,7 @@ def chunk_embed(
         )
         chunk_overlap = chunk_size // 2
 
+
     chromadb_path = f"chromadb/sessions/{session_id}"
     chroma_client = chromadb.PersistentClient(path=chromadb_path)
     collection = chroma_client.get_or_create_collection(name=collection_name)

@@ -1,9 +1,22 @@
 from typing import List
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLineEdit, QPushButton, QLabel
+from PySide6.QtWidgets import (
+    QWidget,
+    QVBoxLayout,
+    QHBoxLayout,
+    QLineEdit,
+    QPushButton,
+    QLabel,
+)
 from PySide6.QtCore import Qt
 
+
 class MultiStringInputWidget(QWidget):
-    def __init__(self, label_text: str = "Enter value", placeholder_text: str = "https://example.com", parent = None):
+    def __init__(
+        self,
+        label_text: str = "Enter value",
+        placeholder_text: str = "https://example.com",
+        parent=None,
+    ):
         super().__init__(parent)
 
         self.inputs = []
@@ -23,12 +36,10 @@ class MultiStringInputWidget(QWidget):
         self.clear_add_layout.addWidget(self.add_button)
         self.clear_add_layout.addWidget(self.clear_button)
 
-
-
         self.layout.addLayout(self.clear_add_layout)
 
         self.add_input()
-    
+
     def add_input(self, text: str = "") -> None:
         line_edit = QLineEdit()
         line_edit.setPlaceholderText(self.placeholder_text)
@@ -60,19 +71,16 @@ class MultiStringInputWidget(QWidget):
                 self.layout.removeWidget(widget_to_remove)
                 widget_to_remove.deleteLater()
                 break
-    
+
     def get_strings(self) -> List[str]:
         return [edit.text().strip() for edit in self.inputs if edit.text().strip()]
-    
+
     def clear_all(self):
         for edit in self.inputs:
             edit.parentWidget().deleteLater()
         self.inputs.clear()
-    
-        
-        
 
-
-
-
-
+    def set_strings(self, values: List[str]) -> None:
+        self.clear_all()
+        for link in values:
+            self.add_input(link)

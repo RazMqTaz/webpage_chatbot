@@ -41,16 +41,20 @@ class AggregateWorker(QObject):
 
             if self.domain_url:
                 for domain in self.domain_url:
-                    self.status_update.emit("Crawling Webpage... (This may take a while)")
+                    self.status_update.emit(
+                        "Crawling Webpage... (This may take a while)"
+                    )
                     crawl(domain, session_id=self.session_id)
                 self.status_update.emit("Scraping Webpages... (This may take a while)")
                 scrape(session_id=self.session_id)
 
             if self.website_url:
                 self.status_update.emit("Scraping Website...")
-                #os.makedirs(f"data/sessions/{self.session_id}", exist_ok=True)
+                # os.makedirs(f"data/sessions/{self.session_id}", exist_ok=True)
                 for url in self.website_url:
-                    with open(f"data/sessions/{self.session_id}/crawled_pages.txt", "a") as f:
+                    with open(
+                        f"data/sessions/{self.session_id}/crawled_pages.txt", "a"
+                    ) as f:
                         f.write(url + "\n")
                 scrape(session_id=self.session_id)
 
@@ -59,14 +63,23 @@ class AggregateWorker(QObject):
                 for note in self.obsidian_files:
                     walk_convert(session_id=self.session_id, src_dir=note)
 
-            if self.doc_urls or self.domain_url or self.website_url or self.obsidian_files:
+            if (
+                self.doc_urls
+                or self.domain_url
+                or self.website_url
+                or self.obsidian_files
+            ):
                 self.status_update.emit("Chunking and Embedding data...")
                 chunk_embed(session_id=self.session_id)
-                generate_metadata(session_id=self.session_id, docs_links=self.doc_urls, obsidian_filepaths=self.obsidian_files)
+                generate_metadata(
+                    session_id=self.session_id,
+                    docs_links=self.doc_urls,
+                    obsidian_filepaths=self.obsidian_files,
+                )
 
             self.status_update.emit("Aggregation Complete!")
         except Exception as e:
-            self.status_update.emit(f"<span style='color:red'>Error: {str(e)}</span>")
+            self.status_update.emit(f"Error: {str(e)}")
             print(e)
         finally:
             self.finished.emit()
