@@ -1,12 +1,14 @@
 from markdown import markdown
 
-from PySide6.QtWidgets import QWidget, QTextEdit, QVBoxLayout, QLabel, QTextBrowser
+from PySide6.QtWidgets import QWidget, QTextEdit, QVBoxLayout, QLabel, QTextBrowser, QMessageBox
 from PySide6.QtCore import Qt, QThread, QTimer, Slot
 from PySide6.QtGui import QKeyEvent, QTextCursor
 
 from my_code.query_bot import query
 from frontend.prompt_worker import PromptWorker
 
+DEFAULT_SYSTEM_PROMPT = ("You are a helpful assistant. Use the following extracted parts of documents to answer the user's questions. " +
+                        "Do not make up answers. Stay grounded in the context provided.\n\n")
 
 class PromptArea(QWidget):
     def __init__(self, session_id: str):
@@ -15,6 +17,8 @@ class PromptArea(QWidget):
         self.thinking_cursor = None
         self.conversation_history = []
         self.model = "gpt-4o-mini"
+        self.top_k = 10
+        self.system_prompt = DEFAULT_SYSTEM_PROMPT
 
         self.setWindowTitle("Chatbot")
 
@@ -65,7 +69,9 @@ class PromptArea(QWidget):
             session_id=self.session_id,
             prompt=user_input,
             history=self.conversation_history,
+            system_prompt=self.system_prompt,
             model=self.model,
+            top_k=self.top_k,
         )
         self.worker.moveToThread(self.thread)
 
@@ -157,3 +163,14 @@ class PromptArea(QWidget):
     def set_model(self, model: str):
         self.model = model
         print("model changed to: " + self.model)
+
+    @Slot(str)
+    def set_top_k(self, top_k: str = "10"):
+        try:
+            self.top_k = int(top_k)
+        except Exception as e:
+            QMessageBox.critical(self, "Error:", "Please enter an integer.")
+    
+    @Slot(str)
+    def set_system_prompt(self, system_prompt: str = DEFAULT_SYSTEM_PROMPT):
+        self.system_prompt = system_prompt

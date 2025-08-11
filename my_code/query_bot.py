@@ -9,6 +9,8 @@ load_dotenv()
 
 client = OpenAI()
 
+DEFAULT_SYSTEM_PROMPT = ("You are a helpful assistant. Use the following extracted parts of documents to answer the user's questions. " +
+                        "Do not make up answers. Stay grounded in the context provided.\n\n")
 
 def get_chroma_collection(session_id: str):
     # initialize chroma persistent client (load existing DB)
@@ -39,11 +41,12 @@ def chat_with_context_stream(
     question: str,
     history: List[Dict[str, str]],
     model: str = "gpt-4o-mini",
+    system_prompt: str = DEFAULT_SYSTEM_PROMPT
 ):
+    print(system_prompt)
     context_text = "\n\n---\n\n".join(context_chunks)
     system_prompt = (
-        "You are a helpful assistant. Use the following extracted parts of documents to answer the user's questions. "
-        "Do not make up answers. Stay grounded in the context provided.\n\n"
+        system_prompt +
         f"{context_text}"
     )
 
@@ -77,8 +80,9 @@ def query(
     session_id: str,
     question: str,
     history: List[Dict[str, str]],
-    top_k: int = 5,
+    top_k: int = 10,
     model: str = "gpt-4o-mini",
+    system_prompt: str = DEFAULT_SYSTEM_PROMPT
 ) -> str:
     question_embedding = embed_text(question)
     collection = get_chroma_collection(session_id=session_id)
@@ -88,6 +92,6 @@ def query(
     context_chunks = results["documents"][0]
 
     answer = chat_with_context_stream(
-        context_chunks=context_chunks, question=question, history=history, model=model
+        context_chunks=context_chunks, question=question, history=history, model=model, system_prompt=system_prompt
     )
     return answer
