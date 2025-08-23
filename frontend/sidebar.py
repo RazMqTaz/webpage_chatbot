@@ -17,6 +17,7 @@ from frontend.load_session import (
     return_obsidian_filepaths,
     return_websites,
 )
+from frontend.download_button import DownloadButton
 
 from PySide6.QtWidgets import (
     QLineEdit,
@@ -68,6 +69,8 @@ class Sidebar(QWidget):
         self.load_button = QPushButton("Load session")
         self.load_button.clicked.connect(self.load_session_clicked)
 
+        self.download_button = DownloadButton(parent=self, session_id=self.session_id)
+
         v_layout = QVBoxLayout()
 
         v_layout.addWidget(self.docs_links)
@@ -83,6 +86,8 @@ class Sidebar(QWidget):
         v_layout.addWidget(self.save_button)
         v_layout.addSpacing(10)
         v_layout.addWidget(self.load_button)
+        v_layout.addSpacing(10)
+        v_layout.addWidget(self.download_button)
         v_layout.addStretch(10)
 
         self.setLayout(v_layout)

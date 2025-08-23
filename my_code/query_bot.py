@@ -1,4 +1,5 @@
 import os
+import json
 from typing import List, Dict
 import chromadb
 import tldextract
@@ -11,6 +12,11 @@ client = OpenAI()
 
 DEFAULT_SYSTEM_PROMPT = ("You are a helpful assistant. Use the following extracted parts of documents to answer the user's questions. " +
                         "Do not make up answers. Stay grounded in the context provided.\n\n")
+TOOLS_JSON_PATH = "my_code/tools.json"
+CURRENT_TOOL_PATH = "data/current_tool_call.json"
+
+with open(TOOLS_JSON_PATH, "r", encoding="utf-8") as f:
+    tools = json.load(f)
 
 def get_chroma_collection(session_id: str):
     # initialize chroma persistent client (load existing DB)
@@ -43,7 +49,6 @@ def chat_with_context_stream(
     model: str = "gpt-4o-mini",
     system_prompt: str = DEFAULT_SYSTEM_PROMPT
 ):
-    print(system_prompt)
     context_text = "\n\n---\n\n".join(context_chunks)
     system_prompt = (
         system_prompt +
@@ -61,8 +66,12 @@ def chat_with_context_stream(
         # controls randomness of the output, 0.2 is good for factual summarization and QA (according to ChatGPT)
         temperature=0.2,
         stream=True,
+        tools=tools,
+        tool_choice="auto"
     )
     full_response = ""
+    tool_call_accum = ""
+    tool_name = None
     for chunk in response:
         # chunk is a dict-like object with 'choices' and delta content
         delta = chunk.choices[0].delta
@@ -71,6 +80,24 @@ def chat_with_context_stream(
             full_response += text
             # Emit partial chunks as they arrive
             yield text
+        
+        # Accumulate tool call fragments
+        if getattr(delta, "tool_calls", None):
+            for tc in delta.tool_calls:
+                if tc.function.name and not tool_name:
+                    tool_name = tc.function.name
+                if tc.function.arguments:
+                    tool_call_accum += tc.function.arguments
+
+                # Write to JSON in real time
+                if tool_name:
+                    try:
+                        args_dict = json.loads(tool_call_accum) if tool_call_accum else {}
+                        with open(CURRENT_TOOL_PATH, "w", encoding="utf-8") as f:
+                            json.dump({"name": tool_name, "arguments": args_dict}, f)
+                    except json.JSONDecodeError:
+                        # JSON is incomplete — just skip for now, next delta will add more
+                        pass
 
     history.append({"role": "user", "content": question})
     history.append({"role": "assistant", "content": full_response})

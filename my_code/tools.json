@@ -1,0 +1,27 @@
+[
+  {
+    "type": "function",
+    "function": {
+      "name": "create_file",
+      "description": "Creates a file inside the session's folder with the specified filename, extension, and content. Ensures the filename is unique by appending a counter if needed.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "filename": {
+            "type": "string",
+            "description": "The base name of the file, without extension. ChatGPT can use this to name the script or document."
+          },
+          "extension": {
+            "type": "string",
+            "description": "The file extension, starting with a dot, e.g., .py, .txt, .md"
+          },
+          "content": {
+            "type": "string",
+            "description": "The text content to write into the file."
+          }
+        },
+        "required": ["filename", "extension", "content"]
+      }
+    }
+  }
+]
