@@ -1,70 +1,216 @@
-# Webscraper Bot
-A voice-enabled AI agent that scrapes websites, reads PDFs, and answers questions using ChatGPT.
+# Webpage Chatbot Frontend
 
-## Quickstart
+This project provides a frontend for the chatbot application.  
+Follow the steps below to set up a working development environment and run the app.
 
-### Step 1: Clone this repository
+---
 
-```bash
-git clone https://github.com/RazMqTaz/webpage_chatbot.git
-cd webpage_chatbot
-```
+## 🚀 Getting Started
 
-### Step 2: Install python 3.12+
-- Linux/macOS: Use pyenv, apt, brew, or download manually
-- Windows: Use the official Python installer.
-### Step 3: Verify python installation
-```
-python3 --version
-```
-#### (Optional) Install UV
-- Note: I used UV, a fast Python package manager that can replace pip and virtualenv, I will include the commands for that as well
-
-    **macOS/Linux**
-    ```
-    curl -Ls https://astral.sh/uv/install.sh | sh
-    ```
-    **Windows**
-    ```
-    iwr https://astral.sh/uv/install.ps1 -useb | iex
-    ```
-### Step 4: Create virtual environment
-**bash**
-```bash
-python3 -m venv .venv # Without UV
-uv venv .venv # Using UV
-source .venv/bin/activate  # Linux/macOS, for both UV and non-UV
-```
-**cmd**
-```cmd
-.venv\Scripts\activate.bat  # Windows cmd
-```
-**powershell**
+### 1) Go to the project folder
+**Windows (PowerShell)**
 ```powershell
-.venv\Scripts\Activate.ps1  # Windows PowerShell
-```
-### Step 5: Install dependencies
-```
-uv pip install -r requirements.txt # UV
-pip install -r requirements.txt # non-UV
+cd C:\Users\<you>\OneDrive\Desktop\VSCode_Projects\webpage_chatbot
 ```
 
-### Step 6: Set up environment variables
-- Create a file named '.env' in your project root with your OpenAI api key
+**macOS / Linux (bash/zsh)**
+```bash
+cd ~/path/to/VSCode_Projects/webpage_chatbot
 ```
-OPENAI_API_KEY=your_openai_key
-```
-- This is how my code accesses the api key, but it's not the only way to do it.
 
-### Step 7: Run code
-- Each script has Click commands, none of them are required except the `--domain` string in the `crawler.py`, the `query_bot.py`, and in the 'run_pipeline.py'. There are defaults for all other args, they are the recommended settings.
-- The `run_pipeline.py` will run all the crawler, scraper, chunker/embedder, and then activate the query bot.
-- Each of these files can be called independently, for example you could rechunk/embed your scraped data if you wanted to change the chunk size or overlap.
-- Just make sure you've run the previous step or else it wont work, for example don't run the scraper before the crawler.
-- To run any script:
-```python
-python3 my_code/filename.py # --domain "https://example.com" (for crawler.py, query_bot.py, and run_pipeline.py)
+---
+
+### 2) Create & activate a virtual environment
+
+> Use Python 3.13 if possible. If your project’s `requirements.txt` demands older pins (e.g., NumPy 2.0.x), Python 3.11 is a safe fallback.
+
+**Windows (PowerShell)**
+```powershell
+# Create
+py -3.13 -m venv .venv
+
+# Activate
+.\.venv\Scripts\Activate.ps1
 ```
-## Important Notes:
-- The `compressor.py` is another way to run this, essentially it takes ALL of the scraped data and runs a chatgpt query to summarize that text down to more manageable context. For obvious reasons this is not as efficient, it simply exists as another method to show why the chunk/embed system is better. If you wanted to integrate this sort of query bot into a voice bot pipeline, perhaps through pipecat, you would probably have to use the `compressor.py`, as chromadb is not natively supported.
-- I have included the old_functions folder, it holds seperated versions of the `chunk_embed.py`, allowing you to do those steps one by one
+
+**macOS / Linux (bash/zsh)**
+```bash
+# Create
+python3 -m venv .venv
+
+# Activate
+source .venv/bin/activate
+```
+
+You should see `(.venv)` in your terminal prompt.
+
+---
+
+### 3) Upgrade packaging tools
+
+**Windows**
+```powershell
+python -m pip install --upgrade pip setuptools wheel
+```
+
+**macOS / Linux**
+```bash
+python3 -m pip install --upgrade pip setuptools wheel
+```
+
+---
+
+### 4) Install dependencies
+
+Make sure `requirements.txt` is compatible across platforms:
+
+- **NumPy** → `numpy>=2.1,<3.0`  (Py 3.13-compatible wheels)
+- **ONNX Runtime** →  
+  - If CPU only: `onnxruntime==1.22.1`  
+  - If using Windows DirectML GPU: `onnxruntime-directml==1.22.1; sys_platform == "win32"`
+- **uvloop** (non-Windows only):  
+  `uvloop==0.21.0; sys_platform != "win32"`
+
+> If you previously used `uvicorn[standard]`, consider:
+> ```
+> uvicorn[standard]==0.34.2; sys_platform != "win32"
+> uvicorn==0.34.2; sys_platform == "win32"
+> ```
+
+**Windows**
+```powershell
+python -m pip install -r requirements.txt
+```
+
+**macOS / Linux**
+```bash
+python3 -m pip install -r requirements.txt
+```
+
+---
+
+### 5) Verify package structure
+
+Ensure these files exist (empty `__init__.py` is OK):
+
+```
+webpage_chatbot/
+│
+├── frontend/
+│   ├── __init__.py
+│   ├── main.py
+│   ├── main_window.py
+│   └── prompt_area.py
+│
+├── my_code/
+│   ├── __init__.py
+│   └── query_bot.py
+│
+├── requirements.txt
+└── run_app.py   (optional launcher)
+```
+
+No platform-specific commands for this step—just check your tree.
+
+---
+
+### 6) Run the frontend
+
+> Always run **from the project root** so package imports resolve.
+
+**Windows**
+```powershell
+# Preferred (module execution keeps project root on sys.path)
+python -m frontend.main
+
+# Optional: use a tiny launcher
+# run_app.py
+# from frontend.main import main
+# if __name__ == "__main__":
+#     main()
+python run_app.py
+```
+
+**macOS / Linux**
+```bash
+python3 -m frontend.main
+
+# Optional launcher
+python3 run_app.py
+```
+
+---
+
+### 7) VS Code setup (optional but recommended)
+
+**Windows / macOS / Linux**
+
+- **Select interpreter**
+  - `Ctrl+Shift+P` (or `Cmd+Shift+P` on macOS) → **Python: Select Interpreter**
+  - Choose:
+    - Windows: `.venv\Scripts\python.exe`
+    - macOS/Linux: `.venv/bin/python`
+
+- **Configure launch** (`.vscode/launch.json`)
+```json
+{
+  "name": "Run frontend",
+  "type": "python",
+  "request": "launch",
+  "module": "frontend.main",
+  "justMyCode": true
+}
+```
+
+---
+
+## 🧰 Troubleshooting
+
+- **`ModuleNotFoundError` for a dependency you installed**
+  - Ensure you’re using the **same interpreter** for install and run:
+    - Windows:
+      ```powershell
+      python -c "import sys; print(sys.executable)"
+      python -m pip show <package>
+      ```
+    - macOS/Linux:
+      ```bash
+      python3 -c "import sys; print(sys.executable)"
+      python3 -m pip show <package>
+      ```
+  - Always prefer `python -m pip install ...` or `python3 -m pip install ...`.
+
+- **`uvloop` error on Windows**
+  - Make sure the `uvloop` line has a platform marker:
+    ```
+    uvloop==0.21.0; sys_platform != "win32"
+    ```
+
+- **NumPy tries to compile from source**
+  - You’re likely on Python 3.13 with an older NumPy pin. Use:
+    ```
+    numpy>=2.1,<3.0
+    ```
+
+- **ONNX Runtime not found for your Python version**
+  - Use `onnxruntime==1.22.1` for Python 3.13.
+  - On Windows w/ DirectML GPU: `onnxruntime-directml==1.22.1; sys_platform == "win32"`
+
+- **Running scripts directly (`python frontend/main.py`) fails to import `frontend`**
+  - Use module execution from project root:
+    - Windows: `python -m frontend.main`
+    - macOS/Linux: `python3 -m frontend.main`
+  - Ensure `frontend/__init__.py` and `my_code/__init__.py` exist.
+
+---
+
+## ✅ Summary
+
+1. Create & activate venv  
+   - Windows: `py -3.13 -m venv .venv && .\.venv\Scripts\Activate.ps1`  
+   - macOS/Linux: `python3 -m venv .venv && source .venv/bin/activate`  
+2. Upgrade pip/setuptools/wheel  
+3. Install requirements (with cross-platform pins)  
+4. Run with `python -m frontend.main` (Windows) or `python3 -m frontend.main` (macOS/Linux)
+
+That’s it—your frontend should be up and running!
