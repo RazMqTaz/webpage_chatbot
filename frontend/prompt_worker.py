@@ -6,8 +6,6 @@ from my_code.query_bot import query
 from my_code.generate_metadata import generate_metadata
 from my_code.create_file import create_file
 
-CURRENT_TOOL_PATH = "data/current_tool_call.json"
-
 class PromptWorker(QObject):
     finished = Signal()
     update_response = Signal(str)
@@ -50,7 +48,8 @@ class PromptWorker(QObject):
             
             # After streaming finishes
             try:
-                with open(CURRENT_TOOL_PATH, "r", encoding="utf-8") as f:
+                current_tool_path = f"data/sessions/{self.session_id}/current_tool_call.json"
+                with open(current_tool_path, "r", encoding="utf-8") as f:
                     final_tool_call = json.load(f)
             except FileNotFoundError:
                 final_tool_call = None

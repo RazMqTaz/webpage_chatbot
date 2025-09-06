@@ -13,7 +13,6 @@ client = OpenAI()
 DEFAULT_SYSTEM_PROMPT = ("You are a helpful assistant. Use the following extracted parts of documents to answer the user's questions. " +
                         "Do not make up answers. Stay grounded in the context provided. Do not create files unless instructed to.\n\n")
 TOOLS_JSON_PATH = "my_code/tools.json"
-CURRENT_TOOL_PATH = "data/current_tool_call.json"
 
 with open(TOOLS_JSON_PATH, "r", encoding="utf-8") as f:
     tools = json.load(f)
@@ -46,8 +45,9 @@ def chat_with_context_stream(
     context_chunks: List[str],
     question: str,
     history: List[Dict[str, str]],
+    tool_call_src: str,
     model: str = "gpt-4o-mini",
-    system_prompt: str = DEFAULT_SYSTEM_PROMPT
+    system_prompt: str = DEFAULT_SYSTEM_PROMPT,
 ):
     context_text = "\n\n---\n\n".join(context_chunks)
     system_prompt = (
@@ -93,7 +93,7 @@ def chat_with_context_stream(
                 if tool_name:
                     try:
                         args_dict = json.loads(tool_call_accum) if tool_call_accum else {}
-                        with open(CURRENT_TOOL_PATH, "w", encoding="utf-8") as f:
+                        with open(tool_call_src, "w", encoding="utf-8") as f:
                             json.dump({"name": tool_name, "arguments": args_dict}, f)
                     except json.JSONDecodeError:
                         # JSON is incomplete — just skip for now, next delta will add more
@@ -117,8 +117,8 @@ def query(
         [question_embedding], n_results=top_k, include=["documents"]
     )
     context_chunks = results["documents"][0]
-
+    tool_call_src = f"data/sessions/{session_id}/current_tool_call.json"
     answer = chat_with_context_stream(
-        context_chunks=context_chunks, question=question, history=history, model=model, system_prompt=system_prompt
+        context_chunks=context_chunks, question=question, history=history, model=model, system_prompt=system_prompt, tool_call_src=tool_call_src
     )
     return answer
