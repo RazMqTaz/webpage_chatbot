@@ -67,7 +67,7 @@ class Settings(QWidget):
         system_prompt_layout.addWidget(self.system_prompt_label)
         system_prompt_layout.addWidget(self.system_prompt_info)
         self.system_prompt_field = QTextEdit("You are a helpful assistant. Use the following extracted parts of documents to answer the user's questions. " +
-                                            "Do not make up answers. Stay grounded in the context provided.\n\n")
+                                            "Do not make up answers. Stay grounded in the context provided. Do not create files unless instructed to.\n\n")
         self.system_prompt_field.setFixedHeight(60)
         
         self.model_combo.currentTextChanged.connect(self.model_changed)

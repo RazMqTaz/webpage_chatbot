@@ -11,7 +11,7 @@ load_dotenv()
 client = OpenAI()
 
 DEFAULT_SYSTEM_PROMPT = ("You are a helpful assistant. Use the following extracted parts of documents to answer the user's questions. " +
-                        "Do not make up answers. Stay grounded in the context provided.\n\n")
+                        "Do not make up answers. Stay grounded in the context provided. Do not create files unless instructed to.\n\n")
 TOOLS_JSON_PATH = "my_code/tools.json"
 CURRENT_TOOL_PATH = "data/current_tool_call.json"
 

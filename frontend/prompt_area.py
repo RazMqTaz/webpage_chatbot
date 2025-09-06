@@ -8,7 +8,7 @@ from my_code.query_bot import query
 from frontend.prompt_worker import PromptWorker
 
 DEFAULT_SYSTEM_PROMPT = ("You are a helpful assistant. Use the following extracted parts of documents to answer the user's questions. " +
-                        "Do not make up answers. Stay grounded in the context provided.\n\n")
+                        "Do not make up answers. Stay grounded in the context provided. Do not create any files with tool-calling unless specifically instructed to.\n\n")
 
 class PromptArea(QWidget):
     def __init__(self, session_id: str):

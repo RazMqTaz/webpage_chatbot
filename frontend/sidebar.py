@@ -98,7 +98,7 @@ class Sidebar(QWidget):
         doc_urls = self.docs_links.get_strings()
         domain_url = self.domain_widget.get_strings()
         website_url = self.website_widget.get_strings()
-        obsidian_files = self.file_selector.get_files()
+        uploaded_files = self.file_selector.get_files()
 
         # Create Thread and Worker:
         self.thread = QThread()
@@ -107,7 +107,7 @@ class Sidebar(QWidget):
             session_id=self.session_id,
             domain_url=domain_url,
             website_url=website_url,
-            obsidian_files=obsidian_files,
+            uploaded_files=uploaded_files,
         )
         self.worker.moveToThread(self.thread)
 

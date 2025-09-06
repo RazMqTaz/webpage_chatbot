@@ -45,7 +45,7 @@ class FileSelectorWidget(QWidget):
             self,
             "Select Markdown Files (.md)",
             "",
-            "Markdown Files (*.md);;All Files (*)",
+            "All Files (*)",
         )
         if new_files:
             # Append only unique files

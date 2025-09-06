@@ -22,14 +22,14 @@ class AggregateWorker(QObject):
         doc_urls: str,
         domain_url: str,
         website_url: str,
-        obsidian_files: List[str],
+        uploaded_files: List[str],
     ):
         super().__init__()
         self.session_id = session_id
         self.doc_urls = doc_urls
         self.domain_url = domain_url
         self.website_url = website_url
-        self.obsidian_files = obsidian_files
+        self.uploaded_files = uploaded_files
 
     def run(self):
         self.status_update.emit("Aggregating Context...")
@@ -58,23 +58,22 @@ class AggregateWorker(QObject):
                         f.write(url + "\n")
                 scrape(session_id=self.session_id)
 
-            if self.obsidian_files:
-                self.status_update.emit("Scraping Obsidian Note...")
-                for note in self.obsidian_files:
-                    walk_convert(session_id=self.session_id, src_dir=note)
+            if self.uploaded_files:
+                self.status_update.emit("Scraping Uploaded Files...")
+                walk_convert(session_id=self.session_id, input_paths=self.uploaded_files)
 
             if (
                 self.doc_urls
                 or self.domain_url
                 or self.website_url
-                or self.obsidian_files
+                or self.uploaded_files
             ):
                 self.status_update.emit("Chunking and Embedding data...")
                 chunk_embed(session_id=self.session_id)
                 generate_metadata(
                     session_id=self.session_id,
                     docs_links=self.doc_urls,
-                    obsidian_filepaths=self.obsidian_files,
+                    obsidian_filepaths=self.uploaded_files,
                 )
 
             self.status_update.emit("Aggregation Complete!")
