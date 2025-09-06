@@ -16,8 +16,6 @@ class DownloadButton(QPushButton):
 
         self.save_button = QPushButton()
         self.save_button.setIcon(QIcon("frontend/download.png"))
-        self.save_button.setIconSize(QSize(32, 32))
-        self.save_button.setFixedSize(48, 48)
         self.save_button.setToolTip("Download Files")
         self.save_button.clicked.connect(self.download_button_clicked)
 
@@ -27,15 +25,14 @@ class DownloadButton(QPushButton):
     def download_button_clicked(self):
         if not os.path.exists(self.CREATED_FILES_SRC):
             QMessageBox.critical(title="Error:", text="No files have been created")
-        target_dir, _ = QFileDialog.getExistingDirectory(
+        target_dir = QFileDialog.getExistingDirectory(
             self,
             "Select Destination",
-            os.path.expanduser("~")
         )
         if target_dir:
             for item in os.listdir(self.CREATED_FILES_SRC):
                 src_path = os.path.join(self.CREATED_FILES_SRC, item)
-                dest_path = os.path.joisn(target_dir, item)
+                dest_path = os.path.join(target_dir, item)
 
                 if os.path.isdir(src_path):
                     shutil.copytree(src_path, dest_path, dirs_exist_ok=True)
