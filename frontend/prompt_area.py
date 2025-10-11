@@ -13,6 +13,7 @@ DEFAULT_SYSTEM_PROMPT = ("You are a helpful assistant. Use the following extract
 class PromptArea(QWidget):
     def __init__(self, session_id: str):
         super().__init__()
+        self.openai_api_key: str = None
         self.session_id = session_id
         self.thinking_cursor = None
         self.conversation_history = []
@@ -66,6 +67,7 @@ class PromptArea(QWidget):
         # Create worker and thread:
         self.thread = QThread()
         self.worker = PromptWorker(
+            openai_api_key=self.openai_api_key,
             session_id=self.session_id,
             prompt=user_input,
             history=self.conversation_history,
@@ -155,6 +157,10 @@ class PromptArea(QWidget):
         self.chat_display.moveCursor(QTextCursor.End)
 
     # @Slot defines this function as a slot, i think it makes it go faster? bit confusing tbh
+
+    @Slot(str)
+    def set_openai_api(self, api: str):
+        self.openai_api_key = api
     @Slot(str)
     def set_session_id(self, session_id: str):
         self.session_id = session_id

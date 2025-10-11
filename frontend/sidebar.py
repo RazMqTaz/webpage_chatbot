@@ -40,6 +40,7 @@ class Sidebar(QWidget):
 
     def __init__(self, session_id: str, parent=None):
         super().__init__(parent)
+        self.openai_api_key = None
         self.session_id = session_id
         self.main_window = parent
         self.files = []
@@ -103,6 +104,7 @@ class Sidebar(QWidget):
         # Create Thread and Worker:
         self.thread = QThread()
         self.worker = AggregateWorker(
+            openai_api_key=self.openai_api_key,
             doc_urls=doc_urls,
             session_id=self.session_id,
             domain_url=domain_url,
@@ -173,3 +175,7 @@ class Sidebar(QWidget):
     @Slot(str)
     def set_session_id(self, session_id: str) -> None:
         self.session_id = session_id
+    
+    @Slot(str)
+    def set_openai_api(self, api: str) -> None:
+        self.openai_api_key = api

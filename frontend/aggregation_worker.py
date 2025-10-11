@@ -18,6 +18,7 @@ class AggregateWorker(QObject):
 
     def __init__(
         self,
+        openai_api_key: str,
         session_id: str,
         doc_urls: str,
         domain_url: str,
@@ -25,6 +26,7 @@ class AggregateWorker(QObject):
         uploaded_files: List[str],
     ):
         super().__init__()
+        self.openai_api_key = openai_api_key
         self.session_id = session_id
         self.doc_urls = doc_urls
         self.domain_url = domain_url
@@ -69,7 +71,7 @@ class AggregateWorker(QObject):
                 or self.uploaded_files
             ):
                 self.status_update.emit("Chunking and Embedding data...")
-                chunk_embed(session_id=self.session_id)
+                chunk_embed(openai_spi_key=self.openai_api_key, session_id=self.session_id)
                 generate_metadata(
                     session_id=self.session_id,
                     docs_links=self.doc_urls,

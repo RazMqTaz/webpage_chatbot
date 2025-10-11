@@ -2,11 +2,15 @@ from PySide6.QtWidgets import QWidget, QLineEdit, QLabel, QVBoxLayout, QHBoxLayo
 from PySide6.QtCore import Signal, Qt
 
 class Settings(QWidget):
+    openai_api_changed = Signal(str)
     model_changed = Signal(str)
     top_k_changed = Signal(str)
     system_prompt_changed = Signal(str)
     def __init__(self):
         super().__init__()
+
+        self.api_label = QLabel("Input OpenAI API key")
+        self.api_field = QLineEdit()
 
         self.model_label = QLabel("Select GPT Model:")
         self.model_combo = QComboBox()
@@ -70,11 +74,15 @@ class Settings(QWidget):
                                             "Do not make up answers. Stay grounded in the context provided. Do not create files unless instructed to.\n\n")
         self.system_prompt_field.setFixedHeight(60)
         
+        self.api_field.textChanged.connect(self.openai_api_changed)
         self.model_combo.currentTextChanged.connect(self.model_changed)
         self.top_k_field.textChanged.connect(self.top_k_changed)
         self.system_prompt_field.textChanged.connect(self.emit_system_prompt_changed)
+        
 
         layout = QVBoxLayout()
+        layout.addWidget(self.api_label)
+        layout.addWidget(self.api_field)
         layout.addWidget(self.model_label)
         layout.addWidget(self.model_combo)
         layout.addLayout(top_k_layout)

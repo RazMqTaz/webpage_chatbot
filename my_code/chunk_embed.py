@@ -1,7 +1,6 @@
 import os
 from pathlib import Path
 from typing import List
-from dotenv import load_dotenv
 import tiktoken
 import chromadb
 from openai import OpenAI
@@ -17,11 +16,11 @@ DEFAULT_COLLECTION_NAME = "chunks"
 DEFAULT_CHROMADB_PATH = "chromadb"
 DEFAULT_EMBEDDING_MODEL = "text-embedding-3-small"
 
-load_dotenv()
 tokenizer = tiktoken.get_encoding("cl100k_base")
-client = OpenAI()
+
 
 def chunk_embed(
+    openai_spi_key: str,
     session_id: str,
     chunk_size: int = DEFAULT_CHUNK_SIZE,
     chunk_overlap: int = DEFAULT_CHUNK_OVERLAP,
@@ -29,7 +28,8 @@ def chunk_embed(
     collection_name: str = DEFAULT_COLLECTION_NAME,
     embedding_model: str = DEFAULT_EMBEDDING_MODEL,
 ) -> None:
-    
+
+    client = OpenAI(api_key=openai_spi_key)
     input_dir = f"data/sessions/{session_id}/"
 
     # validate chunk_overlap < chunk_size
@@ -41,7 +41,6 @@ def chunk_embed(
             )
         )
         chunk_overlap = chunk_size // 2
-
 
     chromadb_path = f"chromadb/sessions/{session_id}"
     chroma_client = chromadb.PersistentClient(path=chromadb_path)
@@ -91,27 +90,32 @@ def chunk_embed(
 
                 chunks = split_into_chunks(text)
 
-                # Naming stuff, ultimately: 
+                # Naming stuff, ultimately:
                 # base_name holds filename with the stem ('.txt')
                 # relative_root will change data/google/documents to google_documents
                 # base_prefix will ensure unique ID's, even if files have same name in different data/ folders:
                 #       e.g. "google_notes", "obsidian_notes"
                 base_name = Path(filename).stem
-                relative_root = Path(root).relative_to(input_dir).as_posix().replace("/", "_")
-                base_prefix = f"{relative_root}_{base_name}" if relative_root else base_name
+                relative_root = (
+                    Path(root).relative_to(input_dir).as_posix().replace("/", "_")
+                )
+                base_prefix = (
+                    f"{relative_root}_{base_name}" if relative_root else base_name
+                )
 
                 for i, chunk in enumerate(chunks):
                     # Assigns id to each chunk
                     chunk_id = f"{base_prefix}_chunk{i}"
                     all_ids.append(chunk_id)
                     all_texts.append(chunk)
-    
+
     # Embeds chunks
     embeddings = embed_texts(all_texts)
     # Sends embeddings to chromadb
     collection.upsert(documents=all_texts, embeddings=embeddings, ids=all_ids)
 
     click.echo(click.style(f"Embedded and stored {len(all_texts)} chunks!", fg="green"))
+
 
 if __name__ == "__main__":
     chunk_embed()

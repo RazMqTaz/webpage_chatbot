@@ -1,21 +1,19 @@
-import os
 import json
 from typing import List, Dict
 import chromadb
 import tldextract
 from openai import OpenAI
-from dotenv import load_dotenv
 
-load_dotenv()
 
-client = OpenAI()
-
-DEFAULT_SYSTEM_PROMPT = ("You are a helpful assistant. Use the following extracted parts of documents to answer the user's questions. " +
-                        "Do not make up answers. Stay grounded in the context provided. Do not create files unless instructed to.\n\n")
+DEFAULT_SYSTEM_PROMPT = (
+    "You are a helpful assistant. Use the following extracted parts of documents to answer the user's questions. "
+    + "Do not make up answers. Stay grounded in the context provided. Do not create files unless instructed to.\n\n"
+)
 TOOLS_JSON_PATH = "my_code/tools.json"
 
 with open(TOOLS_JSON_PATH, "r", encoding="utf-8") as f:
     tools = json.load(f)
+
 
 def get_chroma_collection(session_id: str):
     # initialize chroma persistent client (load existing DB)
@@ -31,7 +29,7 @@ def get_domain_name(url: str) -> str:
 
 
 # this function exists as a bridge between natural language question and the vector database
-def embed_text(text: str) -> str:
+def embed_text(client: OpenAI, text: str) -> str:
     # converts text into vector(embedding)
     response = client.embeddings.create(
         # wrap text into a list, API allows batching so even one item must be in a list
@@ -42,6 +40,7 @@ def embed_text(text: str) -> str:
 
 
 def chat_with_context_stream(
+    client: OpenAI,
     context_chunks: List[str],
     question: str,
     history: List[Dict[str, str]],
@@ -50,10 +49,7 @@ def chat_with_context_stream(
     system_prompt: str = DEFAULT_SYSTEM_PROMPT,
 ):
     context_text = "\n\n---\n\n".join(context_chunks)
-    system_prompt = (
-        system_prompt +
-        f"{context_text}"
-    )
+    system_prompt = system_prompt + f"{context_text}"
 
     messages = [{"role": "system", "content": system_prompt}]
     messages.extend(history)
@@ -67,7 +63,7 @@ def chat_with_context_stream(
         temperature=0.2,
         stream=True,
         tools=tools,
-        tool_choice="auto"
+        tool_choice="auto",
     )
     full_response = ""
     tool_call_accum = ""
@@ -80,7 +76,7 @@ def chat_with_context_stream(
             full_response += text
             # Emit partial chunks as they arrive
             yield text
-        
+
         # Accumulate tool call fragments
         if getattr(delta, "tool_calls", None):
             for tc in delta.tool_calls:
@@ -92,7 +88,9 @@ def chat_with_context_stream(
                 # Write to JSON in real time
                 if tool_name:
                     try:
-                        args_dict = json.loads(tool_call_accum) if tool_call_accum else {}
+                        args_dict = (
+                            json.loads(tool_call_accum) if tool_call_accum else {}
+                        )
                         with open(tool_call_src, "w", encoding="utf-8") as f:
                             json.dump({"name": tool_name, "arguments": args_dict}, f)
                     except json.JSONDecodeError:
@@ -104,14 +102,16 @@ def chat_with_context_stream(
 
 
 def query(
+    openai_api_key: str,
     session_id: str,
     question: str,
     history: List[Dict[str, str]],
     top_k: int = 10,
     model: str = "gpt-4o-mini",
-    system_prompt: str = DEFAULT_SYSTEM_PROMPT
+    system_prompt: str = DEFAULT_SYSTEM_PROMPT,
 ) -> str:
-    question_embedding = embed_text(question)
+    client = OpenAI(api_key=openai_api_key)
+    question_embedding = embed_text(client=client, text=question)
     collection = get_chroma_collection(session_id=session_id)
     results = collection.query(
         [question_embedding], n_results=top_k, include=["documents"]
@@ -119,6 +119,12 @@ def query(
     context_chunks = results["documents"][0]
     tool_call_src = f"data/sessions/{session_id}/current_tool_call.json"
     answer = chat_with_context_stream(
-        context_chunks=context_chunks, question=question, history=history, model=model, system_prompt=system_prompt, tool_call_src=tool_call_src
+        client=client,
+        context_chunks=context_chunks,
+        question=question,
+        history=history,
+        model=model,
+        system_prompt=system_prompt,
+        tool_call_src=tool_call_src,
     )
     return answer

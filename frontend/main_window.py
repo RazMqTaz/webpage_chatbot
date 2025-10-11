@@ -2,7 +2,7 @@ import os
 import shutil
 
 from PySide6.QtWidgets import QMainWindow, QWidget, QHBoxLayout, QVBoxLayout, QStatusBar, QStackedWidget
-from PySide6.QtCore import Qt, Signal
+from PySide6.QtCore import Signal
 
 from .prompt_area import PromptArea
 from .sidebar import Sidebar
@@ -53,6 +53,8 @@ class MainWindow(QMainWindow):
         self.session_id_changed.connect(self.prompt_area.set_session_id)
         self.session_id_changed.connect(self.sidebar.set_session_id)
         self.session_id_changed.connect(lambda s_id: setattr(self.app, "sessionId", s_id))
+        self.settings_page.openai_api_changed.connect(self.prompt_area.set_openai_api)
+        self.settings_page.openai_api_changed.connect(self.sidebar.set_openai_api)
         self.settings_page.model_changed.connect(self.prompt_area.set_model)
         self.settings_page.top_k_changed.connect(self.prompt_area.set_top_k)
         self.settings_page.system_prompt_changed.connect(self.prompt_area.set_system_prompt)

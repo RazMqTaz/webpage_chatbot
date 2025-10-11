@@ -14,6 +14,7 @@ class PromptWorker(QObject):
 
     def __init__(
         self,
+        openai_api_key: str,
         session_id: str,
         prompt: str,
         history: list,
@@ -22,6 +23,7 @@ class PromptWorker(QObject):
         top_k: int = 10,
     ):
         super().__init__()
+        self.openai_api_key = openai_api_key
         self.session_id = session_id
         self.prompt = prompt
         self.history = history
@@ -33,6 +35,7 @@ class PromptWorker(QObject):
         self.status_update.emit("Thinking...")
         try:
             stream_generator = query(
+                openai_api_key = self.openai_api_key,
                 session_id=self.session_id,
                 question=self.prompt,
                 history=self.history,
